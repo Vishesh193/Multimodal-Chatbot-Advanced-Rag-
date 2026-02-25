@@ -10,3 +10,4 @@ pdf2image
 sentence-transformers
 open-clip-torch
 numpy
+ollama

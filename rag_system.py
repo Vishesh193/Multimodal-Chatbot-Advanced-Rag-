@@ -22,6 +22,7 @@
 #     → Safe Response
 # ============================================================
 
+import os
 import time
 import json
 from datetime import datetime
@@ -244,6 +245,7 @@ class ProductionMultimodalRAG:
         include_security_check: bool = True,
         include_images:         bool = True,
         max_tokens:             int  = 1024,
+        explicit_image_path:    Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Full RAG query pipeline with security.
@@ -322,8 +324,10 @@ class ProductionMultimodalRAG:
 
         combined_context = "\n\n---\n\n".join(context_parts)
 
-        # Check for associated images (from indexed documents)
-        if include_images:
+        # Check for associated images (from indexed documents or explicit input)
+        if explicit_image_path and os.path.exists(explicit_image_path):
+            source_images.append(explicit_image_path)
+        elif include_images:
             for doc in self.indexed_documents.values():
                 for page in doc.pages:
                     if page.image_paths:
