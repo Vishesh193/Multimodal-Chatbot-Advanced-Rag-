@@ -1,0 +1,12 @@
+chromadb
+python-dotenv
+groq
+PyMuPDF
+pdfplumber
+PyPDF2
+Pillow
+pytesseract
+pdf2image
+sentence-transformers
+open-clip-torch
+numpy
