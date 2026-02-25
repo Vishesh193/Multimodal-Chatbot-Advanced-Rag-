@@ -178,19 +178,21 @@ class AdvancedParentChildRetriever:
                 
                 for rank, res in enumerate(dense_results):
                     rrf_scores[res.chunk_id] = rrf_scores.get(res.chunk_id, 0.0) + 1.0 / (k_rrf + rank + 1)
-                    results_pool[res.chunk_id] = res
+                    if res.chunk_id not in results_pool or res.similarity_score > results_pool[res.chunk_id].similarity_score:
+                        results_pool[res.chunk_id] = res
                     
                 for rank, res in enumerate(sparse_results):
                     rrf_scores[res.chunk_id] = rrf_scores.get(res.chunk_id, 0.0) + 1.0 / (k_rrf + rank + 1)
-                    results_pool[res.chunk_id] = res
+                    if res.chunk_id not in results_pool or res.similarity_score > results_pool[res.chunk_id].similarity_score:
+                        results_pool[res.chunk_id] = res
                     
                 sorted_fused = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)[:self.retrieval_count]
                 
                 fused_results = []
                 for chunk_id, rrf_score in sorted_fused:
                     res = results_pool[chunk_id]
-                    # Map RRF score roughly to a 0-1 similarity score for downstream logic
-                    res.similarity_score = min(1.0, rrf_score * 30.0)
+                    # Keep the original similarity_score from the dense or sparse search
+                    # instead of overwriting it with an arbitrary RRF formula.
                     fused_results.append(res)
 
                 for result in fused_results:

@@ -65,6 +65,11 @@ def interactive_chat(rag: ProductionMultimodalRAG):
             print(f"   LLM router        : {status['components']['llm_router']}")
             continue
 
+        if user_input.lower().endswith(".pdf") and not user_input.lower().startswith("ingest "):
+            print(f"\n💡 Tip: It looks like you're trying to ingest a PDF. Please use the 'ingest' command:")
+            print(f"   ingest {user_input}")
+            continue
+
         if user_input.lower().startswith("ingest "):
             pdf_path = user_input[7:].strip()
             if not os.path.exists(pdf_path):

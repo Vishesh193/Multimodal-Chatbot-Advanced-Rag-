@@ -348,7 +348,6 @@ class LLMRouter:
     def generate(
         self,
         prompt:     str,
-        context:    str  = "",
         images:     Optional[List[str]] = None,
         max_tokens: int  = 1024,
         temperature: float = 0.1,
@@ -365,40 +364,43 @@ class LLMRouter:
         # Route: images → Ollama, text → Groq → Ollama fallback
         if has_images and self.ollama:
             model_used = f"ollama/{self.ollama.vision_model}"
-            answer = self.ollama.generate_with_context(
-                query      = prompt,
-                context    = context,
-                images     = images,
-                max_tokens = max_tokens,
+            answer = self.ollama.generate(
+                prompt      = prompt,
+                images      = images,
+                max_tokens  = max_tokens,
+                temperature = temperature,
+                system      = system or "You are analyzing a document with images/charts.",
             )
 
         elif self.groq:
             model_used = f"groq/{self.groq.model}"
             try:
-                answer = self.groq.generate_with_context(
-                    query      = prompt,
-                    context    = context,
-                    system_prompt = system,
-                    max_tokens = max_tokens,
+                answer = self.groq.generate(
+                    prompt      = prompt,
+                    max_tokens  = max_tokens,
+                    temperature = temperature,
+                    system      = system,
                 )
             except Exception as e:
                 logger.warning(f"Groq failed, falling back to Ollama: {e}")
                 if self.ollama:
                     model_used = f"ollama/{self.ollama.text_model}"
-                    answer = self.ollama.generate_with_context(
-                        query      = prompt,
-                        context    = context,
-                        max_tokens = max_tokens,
+                    answer = self.ollama.generate(
+                        prompt      = prompt,
+                        max_tokens  = max_tokens,
+                        temperature = temperature,
+                        system      = system,
                     )
                 else:
                     raise
 
         elif self.ollama:
             model_used = f"ollama/{self.ollama.text_model}"
-            answer = self.ollama.generate_with_context(
-                query      = prompt,
-                context    = context,
-                max_tokens = max_tokens,
+            answer = self.ollama.generate(
+                prompt      = prompt,
+                max_tokens  = max_tokens,
+                temperature = temperature,
+                system      = system,
             )
         else:
             raise RuntimeError("No LLM available")

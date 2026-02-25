@@ -314,11 +314,12 @@ class ProductionMultimodalRAG:
         context_parts = []
         source_images: List[str] = []
 
-        for i, result in enumerate(retrieval_results[:3]):   # top-3 contexts
+        for i, result in enumerate(retrieval_results[:5]):   # top-5 contexts
             content = result.best_content
             chunk_id = result.metadata.get("chunk_id", f"chunk_{i}")
+            page_str = str(result.metadata.get("page_numbers", "Unknown"))
             context_parts.append(
-                f"[Source {i+1} | ID: {chunk_id[:8]} | "
+                f"[Source {i+1} | ID: {chunk_id[:8]} | Page: {page_str} | "
                 f"Score: {result.similarity_score:.2f}]\n{content}"
             )
 
@@ -328,10 +329,24 @@ class ProductionMultimodalRAG:
         if explicit_image_path and os.path.exists(explicit_image_path):
             source_images.append(explicit_image_path)
         elif include_images:
-            for doc in self.indexed_documents.values():
-                for page in doc.pages:
-                    if page.image_paths:
-                        source_images.extend(page.image_paths[:2])  # max 2 images
+            # Extract images ONLY from the pages where our retrieved chunks came from
+            for r in retrieval_results[:5]:
+                doc_id = r.metadata.get("parent_document_id")
+                page_str = str(r.metadata.get("page_numbers", ""))
+                
+                if doc_id and doc_id in self.indexed_documents and page_str:
+                    doc = self.indexed_documents[doc_id]
+                    # Chunks might span multiple pages (e.g., "3,4")
+                    page_nums = [int(p.strip()) for p in page_str.split(",") if p.strip().isdigit()]
+                    
+                    for page in doc.pages:
+                        if page.page_number in page_nums and page.image_paths:
+                            for img in page.image_paths:
+                                if img not in source_images:
+                                    source_images.append(img)
+            
+            # Limit total images to avoid incredibly slow local vision model processing
+            source_images = source_images[:2]
 
         # ── Step 4: Secure Prompt ─────────────────────────────
         if include_security_check:
@@ -340,12 +355,11 @@ class ProductionMultimodalRAG:
                 context    = combined_context,
             )
         else:
-            secure_prompt = query_text
+            secure_prompt = f"Context:\n{combined_context}\n\nQuestion: {query_text}\n\nAnswer based solely on the context above:"
 
         # ── Step 5: LLM Generation ───────────────────────────
         llm_result = self.llm_router.generate(
             prompt     = secure_prompt,
-            context    = combined_context,
             images     = source_images if source_images and include_images else None,
             max_tokens = max_tokens,
         )
@@ -376,7 +390,7 @@ class ProductionMultimodalRAG:
                     "retrieval_method": r.retrieval_method,
                     "content_preview":  r.child_content[:120] + "...",
                 }
-                for r in retrieval_results[:3]
+                for r in retrieval_results[:5]
             ],
         }
 

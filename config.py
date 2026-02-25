@@ -123,7 +123,7 @@ class RetrievalConfig:
     reranker_model: str         = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
     # Result fusion
-    retrieval_count: int        = 3
+    retrieval_count: int        = 5
 
 
 # ─────────────────────────────────────────────
