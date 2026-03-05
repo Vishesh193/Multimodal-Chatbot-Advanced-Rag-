@@ -11,3 +11,7 @@ sentence-transformers
 open-clip-torch
 numpy
 ollama
+fastapi
+uvicorn
+python-multipart
+pydantic
