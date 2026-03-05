@@ -19,6 +19,7 @@
 # ============================================================
 
 import time
+import numpy as np
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -92,6 +93,8 @@ class AdvancedParentChildRetriever:
         self.retrieval_count   = retrieval_count
         self.use_hyde          = use_hyde
         self.use_multi_query   = use_multi_query
+        self.use_mmr           = getattr(CONFIG.retrieval, "use_mmr", True)
+        self.mmr_lambda        = getattr(CONFIG.retrieval, "mmr_lambda", 0.5)
 
         logger.info(f"🔍 AdvancedParentChildRetriever initialized")
         logger.info(f"   HyDE         : {'✅' if use_hyde else '❌'}")
@@ -328,7 +331,73 @@ Provide {num_queries} variations, one per line (no numbering or bullets):"""
 
         # Sort descending by confidence
         final.sort(key=lambda x: x.confidence_score, reverse=True)
+        
+        # ── Optional MMR Reranking ─────────────────────────────
+        if self.use_mmr and len(final) > 1:
+            final = self._apply_mmr(final)
+
         return final[:self.retrieval_count]
+
+    def _apply_mmr(self, results: List[RetrievalResult]) -> List[RetrievalResult]:
+        """
+        Maximal Marginal Relevance (MMR) for diversity.
+        Formula: λ * sim(q, di) - (1-λ) * max(sim(di, dj))
+        """
+        if not results: return []
+        
+        # 1. Get embeddings for results to calculate document-document similarity
+        contents = [r.child_content for r in results]
+        try:
+            embeddings = self.embedder.embed_texts(contents)
+        except Exception as e:
+            logger.warning(f"MMR embedding failed: {e}. Skipping diversity rerank.")
+            return results
+
+        selected_indices = [0] # Start with the most relevant document
+        remaining_indices = list(range(1, len(results)))
+        
+        # Normalise relevance scores for MMR
+        relevance_scores = np.array([r.confidence_score for r in results])
+        if relevance_scores.max() > 0:
+            relevance_scores = relevance_scores / relevance_scores.max()
+
+        while remaining_indices and len(selected_indices) < self.retrieval_count:
+            best_mmr = -1e9
+            best_idx = -1
+            
+            for i in remaining_indices:
+                # Relevance term
+                relevance = self.mmr_lambda * relevance_scores[i]
+                
+                # Diversity term: penalty for similarity to already selected docs
+                max_sim_to_selected = 0.0
+                for j in selected_indices:
+                    # Cosine similarity
+                    dot = np.dot(embeddings[i], embeddings[j])
+                    norm_i = np.linalg.norm(embeddings[i])
+                    norm_j = np.linalg.norm(embeddings[j])
+                    sim = dot / (norm_i * norm_j) if (norm_i * norm_j) > 0 else 0
+                    max_sim_to_selected = max(max_sim_to_selected, sim)
+                
+                penalty = (1 - self.mmr_lambda) * max_sim_to_selected
+                mmr_score = relevance - penalty
+                
+                if mmr_score > best_mmr:
+                    best_mmr = mmr_score
+                    best_idx = i
+            
+            if best_idx != -1:
+                selected_indices.append(best_idx)
+                remaining_indices.remove(best_idx)
+                # Store MMR score for logging/audit
+                results[best_idx].metadata["mmr_score"] = round(float(best_mmr), 4)
+            else:
+                break
+        
+        reranked = [results[idx] for idx in selected_indices]
+        mmr_str = ", ".join([f"{r.metadata.get('mmr_score', '1.0')}" for r in reranked])
+        logger.info(f"📊 MMR Diversified Scores: {mmr_str}")
+        return reranked
 
     # ── Confidence Scoring ───────────────────────────────────
 

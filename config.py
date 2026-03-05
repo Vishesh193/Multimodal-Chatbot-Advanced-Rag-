@@ -124,6 +124,8 @@ class RetrievalConfig:
 
     # Result fusion
     retrieval_count: int        = 5
+    use_mmr: bool               = True   # Maximal Marginal Relevance reranking
+    mmr_lambda: float           = 0.5    # Diversity vs Relevance balance
 
 
 # ─────────────────────────────────────────────

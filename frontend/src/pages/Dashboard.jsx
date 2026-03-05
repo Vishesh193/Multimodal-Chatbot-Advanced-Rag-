@@ -34,7 +34,7 @@ export default function Dashboard() {
                         <h3 style={{ fontSize: '1.2rem', fontWeight: 500 }}>Vector Store</h3>
                         <Database color="var(--accent-blue)" />
                     </div>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'white', marginBottom: '8px' }}>
+                    <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--accent-deep)', marginBottom: '8px' }}>
                         {status?.vector_store.total_documents || 0}
                     </div>
                     <p style={{ color: 'var(--text-muted)' }}>Total embedded document chunks</p>
@@ -49,7 +49,7 @@ export default function Dashboard() {
                         <h3 style={{ fontSize: '1.2rem', fontWeight: 500 }}>Active Policies</h3>
                         <ShieldAlert color="var(--warning)" />
                     </div>
-                    <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'white', marginBottom: '8px' }}>
+                    <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--accent-deep)', marginBottom: '8px' }}>
                         {status?.insurance?.registered_policies || 0}
                     </div>
                     <p style={{ color: 'var(--text-muted)' }}>Ingested insurance policies</p>

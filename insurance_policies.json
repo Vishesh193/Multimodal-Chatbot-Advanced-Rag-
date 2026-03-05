@@ -1,0 +1,15 @@
+{
+  "dcffb7d8": {
+    "policy_id": "dcffb7d8",
+    "policy_name": "SBI General Health Insurance Policy",
+    "insurer": "SBI General Insurance Company Limited",
+    "policy_type": "health",
+    "policy_number": "",
+    "document_id": "d91571e6-9314-47cc-bd35-26217d764a4f",
+    "pdf_path": "./api_uploads\\sbi health insurance.pdf",
+    "sum_insured": "",
+    "premium": "",
+    "holder_name": "",
+    "tags": []
+  }
+}

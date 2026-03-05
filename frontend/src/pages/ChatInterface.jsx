@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, User, Bot, Loader2, Sparkles, AlertTriangle } from 'lucide-react';
+import { Send, User, Bot, Loader2, Sparkles, AlertTriangle, Server, Activity, CheckCircle2 } from 'lucide-react';
 import { api } from '../api/client';
 
 export default function ChatInterface() {
@@ -55,7 +55,7 @@ export default function ChatInterface() {
                     <select
                         value={language}
                         onChange={(e) => setLanguage(e.target.value)}
-                        style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-secondary)', color: 'white' }}
+                        style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}
                     >
                         <option value="english">English</option>
                         <option value="hindi">Hindi (हिन्दी)</option>
@@ -98,11 +98,11 @@ export default function ChatInterface() {
                             }}>
                                 {msg.content}
 
-                                {msg.meta && msg.meta.retrieved_chunks && msg.meta.retrieved_chunks > 0 && (
+                                {msg.meta && (msg.meta.retrieved_count > 0) && (
                                     <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--glass-border)', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                                         <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Sparkles size={14} color="var(--accent-purple)" /> Used Model: {msg.meta.model_used}</span>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Server size={14} color="var(--success)" /> Searched {msg.meta.retrieved_chunks} chunks</span>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Sparkles size={14} color="var(--accent-purple)" /> {msg.meta.model_used}</span>
+                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Server size={14} color="var(--success)" /> {msg.meta.retrieval_count} chunks</span>
                                         </div>
                                     </div>
                                 )}
@@ -135,7 +135,7 @@ export default function ChatInterface() {
                             borderRadius: '12px',
                             border: '1px solid var(--glass-border)',
                             background: 'var(--bg-secondary)',
-                            color: 'white',
+                            color: 'var(--text-primary)',
                             fontSize: '1rem'
                         }}
                     />

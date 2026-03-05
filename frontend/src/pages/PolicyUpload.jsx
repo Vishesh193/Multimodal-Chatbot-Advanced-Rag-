@@ -122,7 +122,7 @@ export default function PolicyUpload() {
                             value={formData.policy_name}
                             onChange={handleInputChange}
                             placeholder="e.g. Family Floater Base"
-                            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-color)', color: 'white' }}
+                            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-color)', color: 'var(--text-primary)' }}
                         />
                     </div>
                     <div>
@@ -132,7 +132,7 @@ export default function PolicyUpload() {
                             value={formData.insurer}
                             onChange={handleInputChange}
                             placeholder="e.g. Star Health"
-                            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-color)', color: 'white' }}
+                            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-color)', color: 'var(--text-primary)' }}
                         />
                     </div>
                     <div>
@@ -141,7 +141,7 @@ export default function PolicyUpload() {
                             name="policy_type"
                             value={formData.policy_type}
                             onChange={handleInputChange}
-                            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-color)', color: 'white' }}
+                            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-color)', color: 'var(--text-primary)' }}
                         >
                             <option value="health">Health Insurance</option>
                             <option value="motor">Motor Insurance</option>
@@ -157,7 +157,7 @@ export default function PolicyUpload() {
                             value={formData.policy_number}
                             onChange={handleInputChange}
                             placeholder="e.g. P/123456/01"
-                            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-color)', color: 'white' }}
+                            style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid var(--glass-border)', background: 'var(--bg-color)', color: 'var(--text-primary)' }}
                         />
                     </div>
                 </div>
