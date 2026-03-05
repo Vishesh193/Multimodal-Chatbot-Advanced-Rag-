@@ -6,6 +6,7 @@ from .policy_manager    import PolicyManager, PolicyRecord
 from .policy_comparator import PolicyComparator
 from .claim_checklist   import ClaimChecklistGenerator
 from .exclusion_finder  import ExclusionFinder
+from .document_analyser import DocumentAnalyser
 from .language_support  import LanguageSupport, SUPPORTED_LANGUAGES
 from .insurance_rag     import InsuranceRAG
 

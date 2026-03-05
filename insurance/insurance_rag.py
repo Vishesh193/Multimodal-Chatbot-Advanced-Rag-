@@ -8,7 +8,8 @@ Adds all four insurance-specific features on top of the existing RAG pipeline:
   2. Multi-Policy Comparator  → side-by-side policy comparison table
   3. Claim Checklist Generator → personalised step-by-step claim guide
   4. Exclusion Finder        → surface all exclusion clauses
-  5. Multilingual Support    → 12 Indian languages
+  5. Document Analyser       → analyse uploaded bills and rejection letters
+  6. Multilingual Support    → 12 Indian languages
 
 Usage:
     from insurance import InsuranceRAG
@@ -49,6 +50,7 @@ from insurance.policy_manager    import PolicyManager, PolicyRecord
 from insurance.policy_comparator import PolicyComparator
 from insurance.claim_checklist   import ClaimChecklistGenerator
 from insurance.exclusion_finder  import ExclusionFinder
+from insurance.document_analyser import DocumentAnalyser
 from insurance.language_support  import LanguageSupport, SUPPORTED_LANGUAGES
 
 from utils.logger import get_logger
@@ -75,7 +77,8 @@ class InsuranceRAG:
       2. Policy comparison
       3. Claim checklist generation
       4. Exclusion highlighting
-      5. Multilingual support (12 languages)
+      5. Document/bill image analysis
+      6. Multilingual support (12 languages)
 
     Args:
         config          : RAGConfig (uses project default if omitted)
@@ -103,12 +106,15 @@ class InsuranceRAG:
 
         # Primary LLM client (for generation in sub-modules)
         self._llm = (
-            self._base.llm_router.groq_client
-            or self._base.llm_router.ollama_client
+            self._base.llm_router.groq
+            or self._base.llm_router.ollama
             if self._base.llm_router else None
         )
 
         self.auto_disclaimer = auto_disclaimer
+
+        # Ollama vision model from the base system
+        self._vision_llm = self._base.llm_router.ollama if self._base.llm_router else None
 
         # ── Insurance Feature Modules ─────────────────────────
         self.policy_manager = PolicyManager(registry_path=registry_path)
@@ -129,6 +135,10 @@ class InsuranceRAG:
             rag_system     = self,
             policy_manager = self.policy_manager,
             llm_client     = self._llm,
+        )
+
+        self.document_analyser = DocumentAnalyser(
+            vision_llm_client=self._vision_llm
         )
 
         self.language_support = LanguageSupport(llm_client=self._llm) if self._llm else None
@@ -379,6 +389,24 @@ class InsuranceRAG:
             → {"item": "dental treatment", "verdict": "excluded", "explanation": ...}
         """
         return self.exclusion_finder.is_excluded(item, policy_name)
+
+    # ──────────────────────────────────────────────────────────────────
+    # Feature 4: Document Analyser
+    # ──────────────────────────────────────────────────────────────────
+
+    def analyse_bill(self, image_path: str) -> Dict[str, Any]:
+        """
+        Analyse an uploaded hospital bill using the vision model.
+        Returns a structured JSON representation of the bill details.
+        """
+        if not self._vision_llm:
+            return {"error": "Vision LLM not configured."}
+            
+        result = self.document_analyser.analyse_bill(image_path)
+        return {
+            "feature": "document_analysis",
+            "extracted_data": result
+        }
 
     # ──────────────────────────────────────────────────────────────────
     # Policy Registry helpers (pass-through)
