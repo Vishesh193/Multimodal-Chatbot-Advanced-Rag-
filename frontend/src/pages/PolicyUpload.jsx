@@ -78,9 +78,7 @@ export default function PolicyUpload() {
             <h1 className="gradient-text" style={{ fontSize: '2.5rem', marginBottom: '8px' }}>
                 Policy Ingestion
             </h1>
-            <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
-                Add new insurance documents into the RAG vector store for analysis.
-            </p>
+            Add new insurance documents into the secure knowledge base for analysis.
 
             <form onSubmit={handleUpload} className="glass-panel" style={{ padding: '32px' }}>
                 <div
@@ -174,7 +172,7 @@ export default function PolicyUpload() {
                         disabled={status === 'uploading'}
                         style={{ opacity: status === 'uploading' ? 0.7 : 1 }}
                     >
-                        {status === 'uploading' ? <><Loader2 className="animate-spin" size={18} /> Ingesting to Vector Database...</> : 'Ingest Policy'}
+                        {status === 'uploading' ? <><Loader2 className="animate-spin" size={18} /> Syncing to Knowledge Base...</> : 'Ingest Policy'}
                     </button>
                 </div>
             </form>

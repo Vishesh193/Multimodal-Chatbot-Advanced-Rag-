@@ -44,7 +44,7 @@ export default function BillScanner() {
                 Bill & Document Scanner
             </h1>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
-                Extract structured data directly from hospital bills using LLaVA Vision Model
+                Extract structured data directly from hospital bills using high-precision vision intelligence
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(300px, 1fr) 1.5fr', gap: '24px', alignItems: 'flex-start' }}>
@@ -128,7 +128,7 @@ export default function BillScanner() {
                                 <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'var(--accent-glow)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '24px' }}>
                                     <Activity size={40} />
                                 </div>
-                                <p style={{ fontWeight: 500 }}>Ollama Vision is analyzing the image...</p>
+                                <p style={{ fontWeight: 500 }}>The vision intelligence system is analyzing the image...</p>
                                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '8px' }}>Extracting hospital, diagnosis, and amount</p>
                             </div>
                         </div>

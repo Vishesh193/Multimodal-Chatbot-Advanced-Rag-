@@ -99,7 +99,7 @@ export default function LandingPage() {
                 <div style={{ textAlign: 'center', marginBottom: '80px' }}>
                     <h2 style={{ fontSize: '3rem', marginBottom: '16px' }}>Powerful features to demystify insurance</h2>
                     <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', maxWidth: '600px', margin: '0 auto' }}>
-                        Our complete suite of RAG-powered tools ensures you never get lost in a 100-page policy document again.
+                        Our complete suite of intelligence-driven tools ensures you never get lost in a 100-page policy document again.
                     </p>
                 </div>
 

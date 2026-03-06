@@ -25,6 +25,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from utils.logger import get_logger, Timer
 from vectorstore.chroma_store import EnterpriseVectorStore, SearchResult
+from config import CONFIG
 
 logger = get_logger(__name__)
 

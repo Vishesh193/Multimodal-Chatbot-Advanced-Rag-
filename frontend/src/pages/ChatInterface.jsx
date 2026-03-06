@@ -47,7 +47,7 @@ export default function ChatInterface() {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '24px' }}>
                 <div>
                     <h1 className="gradient-text" style={{ fontSize: '2.5rem', marginBottom: '8px' }}>Insurance Assistant</h1>
-                    <p style={{ color: 'var(--text-secondary)' }}>Powered by Llama-3 70B & Vector Search</p>
+                    <p style={{ color: 'var(--text-secondary)' }}>Enterprise Intelligence & Document Search</p>
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -99,12 +99,7 @@ export default function ChatInterface() {
                                 {msg.content}
 
                                 {msg.meta && (msg.meta.retrieved_count > 0) && (
-                                    <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid var(--glass-border)', fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Sparkles size={14} color="var(--accent-purple)" /> {msg.meta.model_used}</span>
-                                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Server size={14} color="var(--success)" /> {msg.meta.retrieval_count} chunks</span>
-                                        </div>
-                                    </div>
+                                    {/* Metadata and chunk info removed for cleaner UI */ }
                                 )}
                             </div>
                         </div>

@@ -23,7 +23,7 @@ export default function Dashboard() {
                 System Overview
             </h1>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
-                Real-time health of the Multimodal Insurance RAG pipeline
+                Real-time health of the insurance intelligence platform
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '24px' }}>
@@ -31,13 +31,13 @@ export default function Dashboard() {
                 {/* Memory Stats */}
                 <div style={{ background: 'var(--bg-secondary)', padding: '24px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <h3 style={{ fontSize: '1.2rem', fontWeight: 500 }}>Vector Store</h3>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 500 }}>Knowledge Database</h3>
                         <Database color="var(--accent-blue)" />
                     </div>
                     <div style={{ fontSize: '2.5rem', fontWeight: 700, color: 'var(--accent-deep)', marginBottom: '8px' }}>
                         {status?.vector_store.total_documents || 0}
                     </div>
-                    <p style={{ color: 'var(--text-muted)' }}>Total embedded document chunks</p>
+                    <p style={{ color: 'var(--text-muted)' }}>Total indexed knowledge points</p>
                     <div style={{ marginTop: '16px', fontSize: '0.85rem', color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <CheckCircle2 size={14} /> ChromaDB Connected
                     </div>
@@ -58,7 +58,7 @@ export default function Dashboard() {
                 {/* LLM Routing */}
                 <div style={{ background: 'var(--bg-secondary)', padding: '24px', borderRadius: '12px', border: '1px solid var(--glass-border)' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <h3 style={{ fontSize: '1.2rem', fontWeight: 500 }}>LLM Router</h3>
+                        <h3 style={{ fontSize: '1.2rem', fontWeight: 500 }}>Intelligence Services</h3>
                         <Server color="var(--accent-purple)" />
                     </div>
                     <p style={{ color: 'var(--text-secondary)', margin: '8px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -67,7 +67,7 @@ export default function Dashboard() {
                     </p>
                     <p style={{ color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <Activity size={16} color={status?.llm_router.ollama_available ? 'var(--success)' : 'var(--warning)'} />
-                        Ollama (Vision)
+                        Local Vision AI
                     </p>
                 </div>
 

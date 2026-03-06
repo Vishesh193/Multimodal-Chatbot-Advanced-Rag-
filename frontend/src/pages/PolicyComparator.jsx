@@ -57,7 +57,7 @@ export default function PolicyComparator() {
                 Policy Comparator
             </h1>
             <p style={{ color: 'var(--text-secondary)', marginBottom: '32px' }}>
-                Compare two uploaded policies side-by-side using RAG Vector Search.
+                Compare two uploaded policies side-by-side with high precision.
             </p>
 
             <form onSubmit={handleCompare} className="glass-panel" style={{ padding: '32px', marginBottom: '32px' }}>

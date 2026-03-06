@@ -100,7 +100,7 @@ function AppLayout() {
               <Shield size={24} />
               <div>
                 <h4 style={{ margin: 0, fontSize: '1rem' }}>AI Insurance Assistant Active</h4>
-                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Your completely private LLM environment is ready to securely analyze your uploaded documents.</p>
+                <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-secondary)' }}>Your secure intelligence environment is ready to analyze your uploaded documents with precision.</p>
               </div>
             </div>
 
