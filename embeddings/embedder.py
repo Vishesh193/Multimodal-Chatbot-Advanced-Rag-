@@ -279,6 +279,10 @@ class MultimodalEmbedder:
         """Embed a user query for retrieval."""
         return self.text_embedder.embed_query(query)
 
+    def embed_texts(self, texts: List[str]) -> np.ndarray:
+        """Embed a list of text strings (for MMR etc)."""
+        return self.text_embedder.embed_texts(texts)
+
     def embed_image_for_search(self, query: str) -> Optional[np.ndarray]:
         """Embed text for cross-modal image search (requires CLIP)."""
         if self.clip_embedder:

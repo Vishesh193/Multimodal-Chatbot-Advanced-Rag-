@@ -11,6 +11,7 @@
 #   If Groq unavailable      → Ollama text model (fallback)
 # ============================================================
 
+import os
 import time
 import json
 from typing import Any, Dict, List, Optional
@@ -229,6 +230,9 @@ class OllamaClient:
         use_vision = bool(images) and self.vision_model
         model      = self.vision_model if use_vision else self.text_model
 
+        if not model:
+            return "Error: No model specified for generation."
+
         try:
             with Timer("ollama_inference") as t:
                 msg: Dict[str, Any] = {
@@ -236,8 +240,8 @@ class OllamaClient:
                     "prompt": prompt,
                     "options": {
                         "num_predict": max_tokens  or self.max_tokens,
-                        "temperature": temperature or self.temperature,
-                        "num_ctx"    : 1024,  # Re-added to fit in limited sys memory 
+                        "temperature": 0.0 if use_vision else (temperature or self.temperature),
+                        "num_ctx"    : 4096,
                         "low_vram"   : True,
                     },
                     "stream": False,
@@ -250,13 +254,23 @@ class OllamaClient:
                     import base64
                     b64_images = []
                     for img_path in images:
+                        if not os.path.exists(img_path):
+                            logger.error(f"Image not found: {img_path}")
+                            continue
                         with open(img_path, "rb") as f:
                             b64_images.append(
                                 base64.b64encode(f.read()).decode()
                             )
                     msg["images"] = b64_images
 
-                response = ollama_lib.generate(**msg)
+                try:
+                    response = ollama_lib.generate(**msg)
+                except Exception as ollama_err:
+                    err_str = str(ollama_err)
+                    if "not found" in err_str.lower():
+                        logger.error(f"Model {model} not found. Suggesting pull.")
+                        return f"Error: Model '{model}' not found. Please run `ollama pull {model}` in your terminal."
+                    raise ollama_err
 
             text = response["response"].strip()
             logger.debug(

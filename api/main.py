@@ -235,8 +235,8 @@ async def analyse_medical_bill(file: UploadFile = File(...), rag_sys: InsuranceR
             shutil.copyfileobj(file.file, buffer)
             
         result = rag_sys.analyse_bill(temp_path)
-        if "error" in result:
-            raise HTTPException(status_code=500, detail=result["error"])
+        if "error" in result.get("extracted_data", {}):
+            raise HTTPException(status_code=500, detail=result["extracted_data"]["error"])
             
         return result
     finally:

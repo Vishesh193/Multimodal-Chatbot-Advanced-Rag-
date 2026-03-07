@@ -382,7 +382,10 @@ class ProductionMultimodalRAG:
             "retrieval_count":  len(retrieval_results),
             "execution_time_s": execution_time,
             "security_checked": include_security_check,
-            "retrieved_contents": [r.child_content for r in retrieval_results],
+            "retrieved_contents": [
+                f"[Source ID: {r.metadata.get('chunk_id', '')[:8]}] {r.child_content}" 
+                for r in retrieval_results
+            ],
             "sources": [
                 {
                     "chunk_id":        r.metadata.get("chunk_id", "")[:12],

@@ -28,7 +28,7 @@ class LLMConfig:
     groq_mixtral_model: str     = "mixtral-8x7b-32768"
 
     # Ollama models (local, vision-capable)
-    ollama_vision_model: str    = ""
+    ollama_vision_model: str    = "llava:latest"
     ollama_text_model: str      = "mistral:latest"
     ollama_base_url: str        = "http://localhost:11434"
 
@@ -70,8 +70,8 @@ class EmbeddingConfig:
 @dataclass
 class ChunkingConfig:
     # Parent chunks (for context during generation)
-    parent_chunk_size: int      = 1000  # Reduced to fit limited memory context
-    parent_chunk_overlap: int   = 100
+    parent_chunk_size: int      = 2000  
+    parent_chunk_overlap: int   = 200
 
     # Child chunks (for retrieval/search)
     child_chunk_size: int       = 300
@@ -123,7 +123,7 @@ class RetrievalConfig:
     reranker_model: str         = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 
     # Result fusion
-    retrieval_count: int        = 5
+    retrieval_count: int        = 6
     use_mmr: bool               = True   # Maximal Marginal Relevance reranking
     mmr_lambda: float           = 0.5    # Diversity vs Relevance balance
 

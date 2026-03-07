@@ -154,79 +154,84 @@ class AdvancedParentChildRetriever:
         queries_to_process.append((query, "vector"))
 
         # ── 3. Retrieve for each query ────────────────────────
-        all_results: List[RetrievalResult] = []
+        # Collect ALL results from ALL methods in a single pool for RRF
+        results_pool:  Dict[str, SearchResult] = {}
+        dense_rankings:  List[List[str]] = []   # List of chunk_ids for each query's dense search
+        sparse_rankings: List[List[str]] = []   # List of chunk_ids for each query's sparse search
 
         for query_text, method in queries_to_process:
             try:
                 query_embedding = self.embedder.embed_query(query_text)
                 
-                # Dense Search (Chroma)
-                dense_results   = self.vector_store.similarity_search(
+                # Dense Search (Vector)
+                dense_results = self.vector_store.similarity_search(
                     query_embedding = query_embedding,
-                    n_results       = self.retrieval_count,
-                    include_distances = True,
+                    n_results       = self.retrieval_count * 2, # Increase pool for fusion
                 )
+                dense_ids = []
+                for res in dense_results:
+                    dense_ids.append(res.chunk_id)
+                    if res.chunk_id not in results_pool:
+                        results_pool[res.chunk_id] = res
+                    # Store method metadata for scoring
+                    results_pool[res.chunk_id].metadata["method_found"] = method
+                dense_rankings.append(dense_ids)
                 
-                # Sparse Search (BM25)
-                sparse_results = []
-                if hasattr(self.vector_store, "bm25_search"):
+                # Sparse Search (BM25) - only on original/variations, not HyDE
+                if hasattr(self.vector_store, "bm25_search") and method != "hyde":
                     sparse_results = self.vector_store.bm25_search(
                         query     = query_text,
-                        n_results = self.retrieval_count,
+                        n_results = self.retrieval_count * 2,
                     )
+                    sparse_ids = []
+                    for res in sparse_results:
+                        sparse_ids.append(res.chunk_id)
+                        if res.chunk_id not in results_pool:
+                            results_pool[res.chunk_id] = res
+                    sparse_rankings.append(sparse_ids)
                 
-                # Reciprocal Rank Fusion (RRF)
-                rrf_scores = {}
-                results_pool = {}
-                k_rrf = 60
-                
-                for rank, res in enumerate(dense_results):
-                    rrf_scores[res.chunk_id] = rrf_scores.get(res.chunk_id, 0.0) + 1.0 / (k_rrf + rank + 1)
-                    if res.chunk_id not in results_pool or res.similarity_score > results_pool[res.chunk_id].similarity_score:
-                        results_pool[res.chunk_id] = res
-                    
-                for rank, res in enumerate(sparse_results):
-                    rrf_scores[res.chunk_id] = rrf_scores.get(res.chunk_id, 0.0) + 1.0 / (k_rrf + rank + 1)
-                    if res.chunk_id not in results_pool or res.similarity_score > results_pool[res.chunk_id].similarity_score:
-                        results_pool[res.chunk_id] = res
-                    
-                sorted_fused = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)[:self.retrieval_count]
-                
-                fused_results = []
-                for chunk_id, rrf_score in sorted_fused:
-                    res = results_pool[chunk_id]
-                    # Keep the original similarity_score from the dense or sparse search
-                    # instead of overwriting it with an arbitrary RRF formula.
-                    fused_results.append(res)
-
-                for result in fused_results:
-                    # ── 4. Parent-Child Context Upgrade ─────────
-                    child_id       = result.chunk_id
-                    parent_chunk   = self.vector_store.get_parent_for_child(child_id)
-                    parent_content = parent_chunk.content if parent_chunk else ""
-
-                    retrieval_result = RetrievalResult(
-                        child_content    = result.content,
-                        parent_content   = parent_content, # type: ignore
-                        similarity_score = result.similarity_score,
-                        confidence_score = self._calc_confidence(
-                            result.similarity_score, method
-                        ),
-                        retrieval_method = method,
-                        metadata         = result.metadata,
-                        query_used       = query_text,
-                    )
-                    all_results.append(retrieval_result)
-
             except Exception as e:
-                logger.warning(f"Retrieval failed for query '{query_text[:50]}': {e}")
+                logger.warning(f"Retrieval failed for variation '{query_text[:30]}': {e}")
 
-        # ── 5. Rank & Deduplicate ─────────────────────────────
-        final_results = self._rank_and_deduplicate(all_results)
+        # ── 4. Global Reciprocal Rank Fusion (RRF) ───────────
+        # This fuses results across Vector vs Sparse AND across different Query Variations
+        rrf_scores: Dict[str, float] = {}
+        k_rrf = 60
+        
+        for ranking in dense_rankings + sparse_rankings:
+            for rank, chunk_id in enumerate(ranking):
+                # Apply boost for original query
+                boost = 1.2 if results_pool[chunk_id].metadata.get("method_found") == "vector" else 1.0
+                rrf_scores[chunk_id] = rrf_scores.get(chunk_id, 0.0) + (1.0 / (k_rrf + rank + 1)) * boost
+
+        # Sort and select top results
+        sorted_ids = sorted(rrf_scores.items(), key=lambda x: x[1], reverse=True)[:self.retrieval_count * 2]
+        
+        final_pool: List[RetrievalResult] = []
+        for chunk_id, rrf_score in sorted_ids:
+            res = results_pool[chunk_id]
+            method = res.metadata.get("method_found", "unknown")
+            
+            # Upgrade to Parent Context
+            parent_chunk = self.vector_store.get_parent_for_child(chunk_id)
+            parent_content = parent_chunk.content if parent_chunk else ""
+
+            final_pool.append(RetrievalResult(
+                child_content    = res.content,
+                parent_content   = parent_content, # type: ignore
+                similarity_score = res.similarity_score,
+                confidence_score = self._calc_confidence(res.similarity_score, method),
+                retrieval_method = method,
+                metadata         = {**res.metadata, "rrf_score": round(rrf_score, 4)},
+                query_used       = query,
+            ))
+
+        # ── 5. Global Rank & Deduplicate ─────────────────────
+        final_results = self._rank_and_deduplicate(final_pool)
 
         elapsed = time.time() - start_time
         logger.info(
-            f"✅ Retrieved {len(final_results)} unique results in {elapsed:.2f}s"
+            f"✅ Fused retrieval: {len(final_results)} top results in {elapsed:.2f}s"
         )
         return final_results
 

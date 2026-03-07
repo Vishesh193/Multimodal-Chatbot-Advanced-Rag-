@@ -14,25 +14,31 @@ logger = get_logger(__name__)
 
 # ── Extraction Prompts ────────────────────────────────────────────────────
 BILL_EXTRACTION_PROMPT = """\
-You are an expert medical bill analyst. Extract the key structured details \
-from the provided hospital bill image. 
+Analyze the provided hospital final bill image with extreme precision. Extract the following details:
+
+1. **Hospital Name**: Look for the large header or logo (e.g., "TGH Onco-Life Cancer Centre").
+2. **Patient Name**: Find the text directly to the right of "PATIENT NAME" (e.g., "MRS. ZAMBRE CHAAYA SHRIKRUSHNA").
+3. **DOA (Admission Date)**: Find the date next to "DOA" (e.g., "12-09-2023").
+4. **Diagnosis**: Extract the text next to "DAIGNOSIS" (spelled with an I) or "DIAGNOSIS" (e.g., "CA RIGHT BREAST").
+5. **Total Amount**: Look for the "Gross Total Amount" or "TOTAL AMOUNT" figure at the bottom (e.g., "26527").
+6. **Breakdown**: Create a list of all "PARTICULARS" line items and their corresponding "TOTAL AMOUNT" values.
 
 Return the data in the following JSON format ONLY:
 {
-  "hospital_name": "Name of hospital",
-  "patient_name": "Name of patient",
-  "admission_date": "YYYY-MM-DD",
-  "discharge_date": "YYYY-MM-DD",
-  "total_amount": "Total bill amount with currency",
-  "diagnosis": "Main diagnosis or procedure mentioned",
+  "hospital_name": "...",
+  "patient_name": "...",
+  "admission_date": "...",
+  "discharge_date": "...",
+  "total_amount": "...",
+  "diagnosis": "...",
   "breakdown": [
-    {"category": "Room Charges", "amount": "..."},
-    {"category": "Surgery", "amount": "..."}
+    {"category": "Item/Particular Name", "amount": "Cost"}
   ]
 }
 
-If any field is missing or unclear, use "Not Found".
-Respond with valid JSON ONLY.
+- For any field not visible, use "Not Found".
+- DO NOT guess or hallucinate numbers not on the bill.
+- Respond with EXCLUSIVELY valid JSON.
 """
 
 
@@ -58,19 +64,38 @@ class DocumentAnalyser:
             result = self.vision_llm.generate(
                 prompt=BILL_EXTRACTION_PROMPT,
                 images=[image_path],
-                max_tokens=500
+                max_tokens=1000  # Increased for potentially longer breakdown
             )
 
             response_text = result.get("answer", "")
-            
-            # Try to parse JSON from the response (in case the model wraps it in markdown blocks)
-            clean_text = response_text.replace("```json", "").replace("```", "").strip()
-            
+            if response_text.startswith("Error:"):
+                return {"error": response_text}
+
+            # More robust JSON extraction
             try:
-                data = json.loads(clean_text)
+                # Find the first { and last }
+                start_idx = response_text.find('{')
+                end_idx = response_text.rfind('}')
+                
+                if start_idx != -1 and end_idx != -1 and end_idx > start_idx:
+                    json_str = response_text[start_idx:end_idx+1]
+                else:
+                    json_str = response_text
+                
+                data = json.loads(json_str)
                 logger.info("✅ Bill details extracted successfully.")
+                
+                # Check for "John Doe" or other signs of hallucination
+                if data.get("patient_name") == "John Doe" or data.get("hospital_name") == "Name of hospital":
+                    logger.warning("Extraction contains template defaults. Vision model may not have analyzed the image.")
+                    return {
+                        "error": "Extraction failed. The model returned a template answer. Please ensure you have a vision-capable model (like llava) installed.",
+                        "raw_extracted": data
+                    }
+                
                 return data
-            except json.JSONDecodeError:
+                
+            except (json.JSONDecodeError, ValueError):
                 logger.warning("Could not parse vision model response as JSON. Returning raw text.")
                 return {
                     "raw_text": response_text,
