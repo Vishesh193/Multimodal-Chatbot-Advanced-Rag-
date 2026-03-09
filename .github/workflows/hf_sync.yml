@@ -12,11 +12,13 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          lfs: true
 
-      - name: Push to Hugging Face
-        uses: nateraw/huggingface-sync-action@v0.0.5
-        with:
-          github_repo_id: Vishesh193/InsureAI
-          huggingface_repo_id: aroravishesh/insure-ai
-          hf_token: ${{ secrets.HF_TOKEN }}
+      - name: Install Hugging Face Hub
+        run: pip install huggingface_hub
+
+      - name: Sync to Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          huggingface-cli login --token $HF_TOKEN
+          huggingface-cli upload aroravishesh/insure-ai . . --repo-type space --all-commits
