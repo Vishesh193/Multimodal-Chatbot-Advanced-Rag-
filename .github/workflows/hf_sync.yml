@@ -13,6 +13,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
       - name: Install Hugging Face Hub
         run: pip install huggingface_hub
 
@@ -20,5 +25,14 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          huggingface-cli login --token $HF_TOKEN
-          huggingface-cli upload aroravishesh/insure-ai . . --repo-type space --all-commits
+          python -c "
+          import os
+          from huggingface_hub import HfApi
+          api = HfApi(token=os.environ.get('HF_TOKEN'))
+          api.upload_folder(
+              folder_path='.',
+              repo_id='aroravishesh/insure-ai',
+              repo_type='space',
+              delete_patterns=['*.pyc', '__pycache__']
+          )
+          "
