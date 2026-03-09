@@ -19,7 +19,7 @@ jobs:
           python-version: '3.10'
 
       - name: Install Hugging Face Hub
-        run: pip install huggingface_hub
+        run: pip install huggingface_hub httpx
 
       - name: Sync to Hugging Face
         env:
@@ -27,12 +27,30 @@ jobs:
         run: |
           python -c "
           import os
+          import sys
           from huggingface_hub import HfApi
-          api = HfApi(token=os.environ.get('HF_TOKEN'))
-          api.upload_folder(
-              folder_path='.',
-              repo_id='aroravishesh/insure-ai',
-              repo_type='space',
-              delete_patterns=['*.pyc', '__pycache__']
-          )
+          
+          # 1. Get and sanitize the token
+          token = os.environ.get('HF_TOKEN', '').strip()
+          if not token:
+              print('❌ ERROR: HF_TOKEN is empty! Please check GitHub Secrets.')
+              sys.exit(1)
+          
+          # 2. Initialize API
+          api = HfApi(token=token)
+          
+          # 3. Perform the upload with error handling
+          try:
+              print('🚀 Starting upload to aroravishesh/insure-ai...')
+              api.upload_folder(
+                  folder_path='.',
+                  repo_id='aroravishesh/insure-ai',
+                  repo_type='space',
+                  delete_patterns=['*.pyc', '__pycache__', '.git/*'],
+                  path_in_repo=''
+              )
+              print('✅ SUCCESS: Sync complete!')
+          except Exception as e:
+              print(f'❌ UPLOAD FAILED: {str(e)}')
+              sys.exit(1)
           "
