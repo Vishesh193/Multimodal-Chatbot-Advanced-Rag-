@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insureai-backend
+  labels:
+    app: insureai-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: insureai-backend
+  template:
+    metadata:
+      labels:
+        app: insureai-backend
+    spec:
+      containers:
+      - name: backend
+        image: vishesh76/insureai:backend
+        ports:
+        - containerPort: 8000
+        envFrom:
+        - secretRef:
+            name: insureai-secrets
+        resources:
+          limits:
+            cpu: "1"
+            memory: "2Gi"
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+        volumeMounts:
+        - name: storage
+          mountPath: /app/chroma_db
+      volumes:
+      - name: storage
+        persistentVolumeClaim:
+          claimName: chromadb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: insureai-backend-service
+spec:
+  selector:
+    app: insureai-backend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP

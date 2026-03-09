@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: insureai-frontend
+  labels:
+    app: insureai-frontend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: insureai-frontend
+  template:
+    metadata:
+      labels:
+        app: insureai-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: vishesh76/insureai:frontend
+        ports:
+        - containerPort: 80
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "200m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: insureai-frontend-service
+spec:
+  selector:
+    app: insureai-frontend
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer

@@ -1,0 +1,41 @@
+services:
+  # ── Backend Service (FastAPI) ──
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file: .env
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./logs:/app/logs
+      - ./api_uploads:/app/api_uploads
+    depends_on:
+      - chromadb
+    networks:
+      - insure_net
+
+  # ── Frontend Service (React) ──
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - insure_net
+
+  # ── Vector Database (ChromaDB) ──
+  chromadb:
+    image: chromadb/chroma:latest
+    ports:
+      - "8001:8000"
+    volumes:
+      - ./chroma_db_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+    networks:
+      - insure_net
+
+networks:
+  insure_net:
+    driver: bridge
