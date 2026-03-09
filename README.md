@@ -1,3 +1,12 @@
+---
+title: InsureAI - Multimodal RAG
+emoji: 🛡️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+pinned: false
+---
+
 # 🛡️ InsureAI — Production-Grade Multimodal Insurance RAG
 [![Sync to Hugging Face](https://github.com/Vishesh193/InsureAI/actions/workflows/hf_sync.yml/badge.svg)](https://huggingface.co/spaces/aroravishesh/insure-ai)
 [![Docker Build](https://github.com/Vishesh193/InsureAI/actions/workflows/main.yml/badge.svg)](https://hub.docker.com/r/vishesh76/insureai)
