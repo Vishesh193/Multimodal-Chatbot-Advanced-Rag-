@@ -1,9 +1,7 @@
-name: Build and Deploy InsureAI
+name: Build and Deploy InsureAI (Production)
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
     branches: [ "main" ]
 
 jobs:
@@ -22,41 +20,14 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      # --- Build Backend ---
-      - name: Build and Push Backend
+      - name: Build and Push Unified Image
         uses: docker/build-push-action@v5
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/insureai:backend
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/insureai:latest
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      # --- Build Frontend ---
-      - name: Build and Push Frontend
-        uses: docker/build-push-action@v5
-        with:
-          context: ./frontend
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/insureai:frontend
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-  deploy-to-k8s:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
-
-      - name: Set up Kubeconfig
-        run: |
-          mkdir -p $HOME/.kube
-          echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 -d > $HOME/.kube/config
-
-      - name: Deploy to K8s
-        run: |
-          kubectl apply -f k8s/
-          kubectl rollout restart deployment/insureai-backend
-          kubectl rollout restart deployment/insureai-frontend
+    # Note: For K8s deployment, see the k8s/ directory for manifests.
+    # Deployment is handled via Hugging Face Spaces sync or manual k8s apply.

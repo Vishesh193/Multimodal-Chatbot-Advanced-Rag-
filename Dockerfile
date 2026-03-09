@@ -1,41 +1,41 @@
 # ==========================================
-# Backend Dockerfile - InsureAI (FastAPI)
+# Unified Dockerfile for Hugging Face Spaces
 # ==========================================
 
-# 1. Base Image
+# --- Stage 1: Build React Frontend ---
+FROM node:20-alpine AS frontend-build
+WORKDIR /frontend
+COPY frontend/package*.json ./
+RUN npm install
+COPY frontend/ .
+RUN npm run build
+
+# --- Stage 2: Final AI Backend ---
 FROM python:3.11-slim
 
-# 2. Set Environment Variables
-ENV PYTHONDONTWRITEBYTECODE=1
-ENV PYTHONUNBUFFERED=1
-ENV DEBIAN_FRONTEND=noninteractive
-
-# 3. Install System Dependencies (OCR, PDF Processing)
+# Install system dependencies for AI & OCR
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    build-essential \
-    tesseract-ocr \
-    libtesseract-dev \
-    poppler-utils \
-    libmagic1 \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    build-essential tesseract-ocr poppler-utils libmagic1 \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 4. Set Working Directory
 WORKDIR /app
 
-# 5. Install Python Dependencies
+# Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 6. Copy Project Code
+# Copy backend code
 COPY . .
 
-# 7. Create Directories for Data/Logs
-RUN mkdir -p logs chroma_db api_uploads extracted_images
+# Copy built frontend assets from Stage 1 to a folder FastAPI can serve
+COPY --from=frontend-build /frontend/dist ./frontend_dist
 
-# 8. Expose Backend Port
-EXPOSE 8000
+# Create necessary directories
+RUN mkdir -p logs chroma_db api_uploads extracted_images && chmod 777 -R /app
 
-# 9. Run the Application
-# Using uvicorn for high-performance async serving
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Expose the port Hugging Face expects
+EXPOSE 7860
+
+# Command to start the app
+# We tell Uvicorn to run on 7860 as per HF requirements
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "7860"]

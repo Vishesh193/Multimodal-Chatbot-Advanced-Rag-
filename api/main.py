@@ -11,6 +11,7 @@ from typing import Dict, Any, List
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 
 from insurance import InsuranceRAG
@@ -242,6 +243,17 @@ async def analyse_medical_bill(file: UploadFile = File(...), rag_sys: InsuranceR
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
+
+# ── 5. Serve Frontend Static Files ────────────────────────────────────────
+# This handles the production deployment where the UI is bundled inside the container
+FRONTEND_PATH = "./frontend_dist"
+if os.path.exists(FRONTEND_PATH):
+    app.mount("/", StaticFiles(directory=FRONTEND_PATH, html=True), name="frontend")
+    logger.info(f"🌐 Serving frontend from {FRONTEND_PATH}")
+else:
+    @app.get("/")
+    async def root():
+        return {"message": "Insurance RAG API is running. (Frontend build not found locally)"}
 
 if __name__ == "__main__":
     import uvicorn
