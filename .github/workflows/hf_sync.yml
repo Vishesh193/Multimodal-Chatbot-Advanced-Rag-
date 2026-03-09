@@ -15,8 +15,8 @@ jobs:
           lfs: true
 
       - name: Push to Hugging Face
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-        run: |
-          git remote add hf https://aroravishesh:$HF_TOKEN@huggingface.co/spaces/aroravishesh/insure-ai
-          git push hf main --force
+        uses: nateraw/huggingface-sync-action@v0.0.5
+        with:
+          github_repo_id: Vishesh193/InsureAI
+          huggingface_repo_id: aroravishesh/insure-ai
+          hf_token: ${{ secrets.HF_TOKEN }}
